@@ -1,0 +1,78 @@
+package com.belteshazzar.wiki.rest;
+
+import java.io.IOException;
+
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.SecurityContext;
+
+@Path("/user")
+@Stateless
+public class RestUser
+{
+	@Context
+	private SecurityContext securityContext;
+	
+	@Context
+	private HttpServletRequest request;
+
+	@Context
+	private HttpServletResponse response;
+	
+	@PersistenceContext(unitName="seJPA")
+	private EntityManager em;
+
+	@POST
+	@Path("/signup")
+	public boolean signup(String username, String password)
+	{
+		return false;
+	}
+
+	@GET
+	@Path("/login")
+	public String login(String username, String password)
+	{
+		try
+		{
+			System.err.println(request);
+			System.err.println(response);
+			System.err.println(securityContext);
+			boolean b = request.authenticate(response);
+			System.err.println(b);
+			if (b) 
+			{
+				
+				 return "login success";
+			}
+			else return "login failed";
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new RestException(RestError.INVALID_EMAIL);
+		}
+		catch (ServletException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new RestException(RestError.INVALID_EMAIL);
+		}
+	}
+	
+	@POST
+	@Path("/logout")
+	public boolean logout()
+	{
+		return false;
+	}
+}

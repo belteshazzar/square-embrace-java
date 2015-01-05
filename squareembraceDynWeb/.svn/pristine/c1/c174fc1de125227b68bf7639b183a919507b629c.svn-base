@@ -1,0 +1,32 @@
+
+
+<?
+	var id = sqrm.param("id");
+	if (null==id)
+	{
+		print("id must be supplied");
+		return;
+	}
+	var wiki = sqrm.get(id);
+	if (null==wiki)
+	{
+		print("wiki for id could not be found");
+		return;
+	}
+?>
+
+id = <?= wiki.id ?>
+title = <?= wiki.title ?>
+body = <?= sqrm.escape(wiki.body) ?>
+note = <?= wiki.note ?>
+
+= Edit a Wiki page.
+
+|  formType | label  | value     |
+|? id       |        | <?= wiki.id ?> |
+|? title    | Title  | <?= sqrm.escape(wiki.title) ?>          |
+|? body     | Body   | <?= sqrm.escape(wiki.body) ?>          |
+|? note     | Note   | <?= sqrm.escape(wiki.note) ?>          |
+|? reset    | Clear  |           |
+|? submit   | Create |           |
+

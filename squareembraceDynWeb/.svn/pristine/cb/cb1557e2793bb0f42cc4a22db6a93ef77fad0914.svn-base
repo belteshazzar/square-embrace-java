@@ -1,0 +1,15 @@
+package com.belteshazzar.wiki.rest.json;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name="SearchResults")
+public class SearchResultsJSON
+{
+    public long generatedIn;
+    public int count;
+    public SearchResultJSON[] results;
+    
+    public SearchResultsJSON()
+    {
+    }
+}

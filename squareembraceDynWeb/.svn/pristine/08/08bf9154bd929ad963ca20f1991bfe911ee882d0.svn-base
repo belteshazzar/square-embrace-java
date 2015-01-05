@@ -1,0 +1,79 @@
+package com.belteshazzar.sqrm;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
+import com.belteshazzar.sqrm.json.SearchResultJSON;
+import com.belteshazzar.sqrm.json.SearchResultsJSON;
+import com.belteshazzar.wiki.WikiTag;
+import com.belteshazzar.wiki.WikiUtils;
+import com.belteshazzar.wiki.WikiUtils.SearchResult;
+
+@Path("/rest/search")
+@Stateless
+public class SqrmRestSearch
+{
+	@PersistenceContext(unitName="seJPA")
+	private EntityManager em;
+
+	@GET
+	@Path("")
+	@Produces(MediaType.APPLICATION_JSON)
+	public SearchResultsJSON get( @QueryParam("q") String q)
+	{
+		long start = System.currentTimeMillis();
+
+		List<SearchResult> results = WikiUtils.search(em, q);
+		if (results==null) throw new SqrmException(SqrmError.INVALID_EMAIL);
+		SearchResultsJSON rs = new SearchResultsJSON();
+		rs.results = new LinkedList<SearchResultJSON>();
+
+		for (SearchResult sr : results)
+		{
+			rs.results.add(new SearchResultJSON(
+					sr.wiki.getId().getUuid(),
+					sr.wiki.getId().getRevision(),
+					sr.wiki.getTitle(),
+					sr.score));
+		}
+		rs.count = results.size();
+		rs.generatedIn = (System.currentTimeMillis()-start);
+		
+		return rs;
+	}
+	
+	@GET
+	@Path("/{tag}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public SearchResultsJSON getByTag( @PathParam("tag") String tag)
+	{
+		long start = System.currentTimeMillis();
+		
+		List<WikiTag> tags = WikiUtils.getByTag(em, tag);
+		SearchResultsJSON rs = new SearchResultsJSON();
+		rs.results = new LinkedList<SearchResultJSON>();
+		for (WikiTag t : tags)
+		{
+			rs.results.add(new SearchResultJSON(
+					t.getWiki().getId().getUuid(),
+					t.getWiki().getId().getRevision(),
+					t.getWiki().getTitle(),
+					1));
+		}
+		rs.count = tags.size();
+		rs.generatedIn = (System.currentTimeMillis()-start);
+		
+		return rs;
+	}
+	
+}

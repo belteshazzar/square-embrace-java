@@ -1,0 +1,23 @@
+
+this !!is!! some ~~italic __underline__ ~~ with --strikethrough-- , ^^super^^ and ..sub.. gold.
+
+!!bold!!
+
+!!un-closed bold
+
+ and a ..... test.
+ 
+woot ...
+not so much ..
+
+[linnk]
+
+[] fred
+[oops
+
+a[bc]d
+
+ [link| text here]
+ [~user]
+ [http://fred.com]
+

@@ -1,0 +1,60 @@
+package com.belteshazzar.wiki.rest;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.xml.bind.annotation.XmlRootElement;
+
+
+public class RestException extends WebApplicationException {
+
+	private static final long serialVersionUID = 5276896348331701991L;
+
+	@XmlRootElement(name="RestExceptionBody")
+	private static class RestExceptionBody {
+
+		private String errorMessage;
+		private int errorCode;
+		
+		@SuppressWarnings("unused")
+		public RestExceptionBody() {			
+		}
+
+		public RestExceptionBody( RestError err, String msg ) {
+			this.errorMessage = err.getMessage();
+			if ( msg!=null ) this.errorMessage += " : " + msg;
+			this.errorCode = err.getCode();
+		}
+
+		@SuppressWarnings("unused")
+		public int getErrorCode() {
+			return errorCode;
+		}
+
+		@SuppressWarnings("unused")
+		public void setErrorCode(int errorCode) {
+			this.errorCode = errorCode;
+		}
+
+		@SuppressWarnings("unused")
+		public String getErrorMessage() {
+			return errorMessage;
+		}
+
+		@SuppressWarnings("unused")
+		public void setErrorMessage(String errorMessage) {
+			this.errorMessage = errorMessage;
+		}
+	}
+
+	public RestException(RestError err) {
+		this(err, null);
+	}
+
+	public RestException(RestError err, String msg) {
+		super(Response.status(Response.Status.OK)
+            .entity( new RestExceptionBody(err,msg) )
+            .type(MediaType.APPLICATION_JSON)
+            .build());
+	}
+}

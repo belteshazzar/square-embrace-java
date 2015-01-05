@@ -1,0 +1,116 @@
+package com.belteshazzar.wiki;
+
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import com.belteshazzar.sqrm.SqrmError;
+import com.belteshazzar.sqrm.SqrmException;
+import com.belteshazzar.sqrm.json.WikiRequestJSON;
+import com.belteshazzar.sqrm.json.WikiTagJSON;
+import com.belteshazzar.wiki.Wiki;
+import com.belteshazzar.wiki.WikiPK;
+import com.belteshazzar.wiki.WikiTag;
+
+@Stateless
+public class WikiDAO
+{
+	@PersistenceContext(unitName = "seJPA")
+	private EntityManager em;
+
+	public Wiki create(WikiRequestJSON cwr)
+	{
+		if (cwr == null) throw new SqrmException(SqrmError.INVALID_EMAIL);
+
+		Wiki wiki = new Wiki();
+		wiki.setId(new WikiPK());
+		wiki.getId().setTitle(cwr.title);
+		wiki.getId().setRevision(0);
+		wiki.setBody(cwr.body);
+		wiki.setCreatedAt(new Date());
+		wiki.setRevisedAt(new Date());
+		wiki.setNote(cwr.note);
+		List<WikiTag> tags = new LinkedList<WikiTag>();
+		if (cwr.tags != null)
+		{
+			for (WikiTagJSON st : cwr.tags)
+			{
+				tags.add(new WikiTag(wiki, st.name, st.value, true));
+			}
+		}
+		wiki.setTags(tags);
+
+		WikiUtils.extractTags(em, wiki);
+
+		em.persist(wiki);
+
+		return wiki;
+	}
+
+	public Wiki read(String title)
+	{
+		Wiki w = WikiUtils.getByTitle(em, title);
+		return w;
+	}
+
+	public Wiki update(String title, WikiRequestJSON uwr)
+	{
+		Wiki w = WikiUtils.getByTitle(em, title);
+		if (w == null) return null;
+
+		Wiki wiki = new Wiki();
+		WikiPK id = new WikiPK();
+
+		id.setTitle(w.getTitle());
+		id.setRevision(w.getRevision() + 1);
+
+		wiki.setId(id);
+		wiki.setBody(uwr.body);
+		wiki.setNote(uwr.note);
+		wiki.setRevisedAt(new Date());
+		wiki.setCreatedAt(w.getCreatedAt());
+
+		List<WikiTag> tags = new LinkedList<WikiTag>();
+		if (uwr.tags != null)
+		{
+			for (WikiTagJSON st : uwr.tags)
+			{
+				tags.add(new WikiTag(wiki, st.name, st.value, true));
+			}
+		}
+		wiki.setTags(tags);
+
+		WikiUtils.extractTags(em, wiki);
+
+		em.persist(wiki);
+
+		// TODO: remove previous revisions in index
+		WikiUtils.index(wiki);
+
+		return wiki;
+	}
+
+	public boolean delete(String title)
+	{
+		Wiki w = WikiUtils.getByTitle(em, title);
+		if (w == null) return false;
+
+		Wiki wiki = new Wiki();
+		WikiPK id = new WikiPK();
+		id.setTitle(w.getId().getTitle());
+		id.setRevision(w.getId().getRevision() + 1);
+
+		wiki.setId(id);
+		wiki.setBody(w.getBody());
+		wiki.setNote(w.getNote());
+		wiki.setCreatedAt(w.getCreatedAt());
+		wiki.setRevisedAt(new Date());
+		em.persist(wiki);
+
+		return true;
+	}
+}

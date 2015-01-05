@@ -1,0 +1,70 @@
+package com.belteshazzar.wiki.rest;
+
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
+import com.belteshazzar.wiki.Wiki;
+import com.belteshazzar.wiki.WikiUtils;
+import com.belteshazzar.wiki.rest.json.WikiJSON;
+
+@Path("/page")
+@Stateless
+public class RestPage
+{
+	@PersistenceContext(unitName="seJPA")
+	private EntityManager em;
+
+	@Context
+	private UriInfo uriInfo;
+	
+	@GET
+	@Path("/{title}")
+	@Produces(MediaType.TEXT_HTML)
+	public Response get( @PathParam("title") String title )
+	{
+		System.err.println("RestPage.get");
+		StringBuilder str = new StringBuilder();
+
+		str.append("<!DOCTYPE html>");
+		str.append("<html>");
+		str.append("<head>");
+		str.append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=ISO-8859-1\">");
+		str.append("<title>Square Embrace</title>");
+		str.append("<script type=\"text/javascript\" src=\"js/jquery-1.9.1.min.js\"></script>"); 
+		str.append("<script type=\"text/javascript\" src=\"js/jquery.history.js\"></script>");
+		str.append("<script type=\"text/javascript\" src=\"js/squareembrace.js\"></script>");
+		str.append("</head>");
+		str.append("<body>");
+
+		long start = System.currentTimeMillis();
+		Wiki w = WikiUtils.getByTitle(em, title);
+
+		if (w!=null)
+		{
+			System.err.println(w.getId().getUuid());
+			WikiJSON wj = WikiUtils.execute(em,uriInfo,w);
+			wj.generatedIn = System.currentTimeMillis() - start;
+			str.append(wj.html);
+		}
+		else
+		{
+			str.append("<p>Not found: " + title + "</p>");
+		}
+
+		str.append("</body>");
+		str.append("</html>");
+		
+		Response.ResponseBuilder response = Response.ok(str.toString());
+		response.type(MediaType.TEXT_HTML);
+		return response.build();
+	}	
+}

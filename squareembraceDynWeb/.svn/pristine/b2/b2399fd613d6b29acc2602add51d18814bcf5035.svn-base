@@ -1,0 +1,49 @@
+package com.belteshazzar.wiki.rest;
+
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
+import com.belteshazzar.wiki.WikiUtils;
+import com.belteshazzar.wiki.WikiUtils.SearchResult;
+import com.belteshazzar.wiki.rest.json.SearchResultJSON;
+import com.belteshazzar.wiki.rest.json.SearchResultsJSON;
+
+@Path("/search")
+@Stateless
+public class RestSearch
+{
+	@PersistenceContext(unitName="seJPA")
+	private EntityManager em;
+
+	@GET
+	@Path("")
+	@Produces(MediaType.APPLICATION_JSON)
+	public SearchResultsJSON get( @QueryParam("q") String q)
+	{
+		long start = System.currentTimeMillis();
+
+		SearchResult[] results = WikiUtils.search(em, q);
+		SearchResultsJSON rs = new SearchResultsJSON();
+		rs.results = new SearchResultJSON[results.length];
+		for (int i=0 ; i<results.length ; i++ )
+		{
+			rs.results[i] = new SearchResultJSON(
+					results[i].wiki.getId().getUuid(),
+					results[i].wiki.getId().getRevision(),
+					results[i].wiki.getTitle(),
+					results[i].score);
+		}
+		rs.count = results.length;
+		rs.generatedIn = (System.currentTimeMillis()-start);
+		
+		return rs;
+	}
+	
+	
+}

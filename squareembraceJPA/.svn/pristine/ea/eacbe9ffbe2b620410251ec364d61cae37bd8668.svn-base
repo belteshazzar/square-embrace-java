@@ -1,0 +1,183 @@
+package com.belteshazzar.wiki;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@Entity(name="Wiki")
+@Table(name="WIKI")
+@XmlRootElement(name="Wiki")
+public class Wiki
+{
+	@EmbeddedId
+	private WikiPK id;
+
+	@Column(name="title")
+	private String title;
+
+	@Lob
+	private String body;
+
+	private String note;
+
+	private int views;
+
+	@Column(name="REVISED_BY_UUID")
+	private String revisedByUUID;
+
+	@ManyToOne(optional=false)
+	@JoinColumn(name="REVISED_BY_UUID",referencedColumnName="UUID",updatable=false,insertable=false)
+	private User revisedBy;
+
+	private String revisedIP;
+
+	@Basic
+	@Temporal(value = TemporalType.DATE)
+	private Date revisedAt;
+
+	private boolean isLocked;
+	
+	private boolean isDeleted;
+	
+	@OneToMany(mappedBy="wiki",cascade=CascadeType.PERSIST)
+	private List<WikiTag> tags;
+	
+	public Wiki()
+	{
+		
+	}
+
+	public WikiPK getId()
+	{
+		return id;
+	}
+
+	public void setId(WikiPK id)
+	{
+		this.id = id;
+	}
+
+	public String getTitle()
+	{
+		return title;
+	}
+
+	public void setTitle(String title)
+	{
+		this.title = title;
+	}
+
+	public String getBody()
+	{
+		return body;
+	}
+
+	public void setBody(String body)
+	{
+		this.body = body;
+	}
+
+	public String getNote()
+	{
+		return note;
+	}
+
+	public void setNote(String note)
+	{
+		this.note = note;
+	}
+
+	public int getViews()
+	{
+		return views;
+	}
+
+	public void setViews(int views)
+	{
+		this.views = views;
+	}
+
+	public User getRevisedBy()
+	{
+		return revisedBy;
+	}
+
+	public void setRevisedBy(User revisedBy)
+	{
+		this.revisedBy = revisedBy;
+	}
+
+	public String getRevisedByUUID()
+	{
+		return revisedByUUID;
+	}
+
+	public void setRevisedByUUID(String revisedByUUID)
+	{
+		this.revisedByUUID = revisedByUUID;
+	}
+
+	public String getRevisedIP()
+	{
+		return revisedIP;
+	}
+
+	public void setRevisedIP(String revisedIP)
+	{
+		this.revisedIP = revisedIP;
+	}
+
+	public Date getRevisedAt()
+	{
+		return revisedAt;
+	}
+
+	public void setRevisedAt(Date revisedAt)
+	{
+		this.revisedAt = revisedAt;
+	}
+
+	public boolean isLocked()
+	{
+		return isLocked;
+	}
+
+	public void setLocked(boolean isLocked)
+	{
+		this.isLocked = isLocked;
+	}
+
+	public boolean isDeleted()
+	{
+		return isDeleted;
+	}
+
+	public void setDeleted(boolean isDeleted)
+	{
+		this.isDeleted = isDeleted;
+	}
+
+	public List<WikiTag> getTags()
+	{
+		return tags;
+	}
+
+	public void setTags(List<WikiTag> tags)
+	{
+		this.tags = tags;
+	}
+
+}

@@ -1,0 +1,51 @@
+package com.belteshazzar.wiki.rest;
+
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+import com.belteshazzar.wiki.WikiTag;
+import com.belteshazzar.wiki.WikiUtils;
+import com.belteshazzar.wiki.rest.json.SearchResultJSON;
+import com.belteshazzar.wiki.rest.json.SearchResultsJSON;
+
+@Path("/tag")
+@Stateless
+public class RestTag
+{
+	@PersistenceContext(unitName="seJPA")
+	private EntityManager em;
+
+	@GET
+	@Path("/{tag}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public SearchResultsJSON getByTag( @PathParam("tag") String tag)
+	{
+		long start = System.currentTimeMillis();
+		
+		List<WikiTag> tags = WikiUtils.getByTag(em, tag);
+		SearchResultsJSON rs = new SearchResultsJSON();
+		rs.results = new SearchResultJSON[tags.size()];
+		for (int i=0 ; i<tags.size() ; i++ )
+		{
+			WikiTag t = tags.get(i);
+			rs.results[i] = new SearchResultJSON(
+					t.getWiki().getId().getUuid(),
+					t.getWiki().getId().getRevision(),
+					t.getWiki().getTitle(),
+					1);
+		}
+		rs.count = tags.size();
+		rs.generatedIn = (System.currentTimeMillis()-start);
+		
+		return rs;
+	}
+
+}

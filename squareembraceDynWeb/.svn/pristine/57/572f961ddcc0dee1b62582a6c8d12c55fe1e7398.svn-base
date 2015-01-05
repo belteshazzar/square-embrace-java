@@ -1,0 +1,198 @@
+package com.belteshazzar.sqrm;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import javax.annotation.Resource;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.transaction.UserTransaction;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+
+import com.belteshazzar.sqrm.json.WikiJSON;
+import com.belteshazzar.sqrm.json.WikiRequestJSON;
+import com.belteshazzar.sqrm.json.WikiTagJSON;
+import com.belteshazzar.wiki.Wiki;
+import com.belteshazzar.wiki.WikiPK;
+import com.belteshazzar.wiki.WikiTag;
+import com.belteshazzar.wiki.WikiUtils;
+
+@Path("/rest/wiki")
+@Stateless
+@TransactionManagement(TransactionManagementType.BEAN)
+public class SqrmRestWiki
+{
+	private static final Pattern BLANK = Pattern.compile("^\\s*$");
+
+	private boolean isBlank(String s)
+	{
+		if (s == null) return true;
+		return BLANK.matcher(s).matches();
+	}
+
+	@PersistenceContext(unitName = "seJPA")
+	private EntityManager em;
+
+	@Resource
+	private UserTransaction utx;
+
+	@Context
+	private UriInfo uriInfo;
+
+	@POST
+	@Path("")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public WikiJSON create(WikiRequestJSON cwr)
+	{
+		if (cwr == null) throw new SqrmException(SqrmError.INVALID_EMAIL);
+
+		if (isBlank(cwr.title)) throw new SqrmException(
+				SqrmError.TITLE_REQUIRED);
+		if (isBlank(cwr.body)) throw new SqrmException(SqrmError.BODY_REQUIRED);
+		if (isBlank(cwr.note)) throw new SqrmException(SqrmError.NOTE_REQUIRED);
+
+		long start = System.currentTimeMillis();
+		Wiki wiki = new Wiki();
+		wiki.setId(new WikiPK());
+		wiki.getId().setTitle(cwr.title);
+		wiki.getId().setRevision(0);
+		wiki.setBody(cwr.body);
+		wiki.setNote(cwr.note);
+		List<WikiTag> tags = new LinkedList<WikiTag>();
+		if (cwr.tags != null)
+		{
+			for (WikiTagJSON st : cwr.tags)
+			{
+				tags.add(new WikiTag(wiki, st.name, false, st.value, true));
+			}
+		}
+		wiki.setTags(tags);
+
+		WikiUtils.extractTags(em, wiki);
+
+		try
+		{
+			utx.begin();
+			em.persist(wiki);
+			utx.commit();
+		}
+		catch (Exception ex)
+		{
+			throw new SqrmException(SqrmError.BODY_REQUIRED);
+		}
+
+		WikiUtils.index(wiki);
+
+		WikiJSON wj = WikiUtils.execute(em, uriInfo, wiki);
+		wj.generatedIn = System.currentTimeMillis() - start;
+		System.out.println("create: wj= " + wj);
+		return wj;
+	}
+
+	@GET
+	@Path("/{title}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public WikiJSON get(@PathParam("title") String title)
+	{
+		long start = System.currentTimeMillis();
+		Wiki w = WikiUtils.getByTitle(em, title);
+		if (w == null) throw new SqrmException(SqrmError.INVALID_EMAIL,
+				"not found");
+		WikiJSON wj = WikiUtils.execute(em, uriInfo, w);
+		wj.generatedIn = System.currentTimeMillis() - start;
+		return wj;
+	}
+
+	@PUT
+	@Path("/{title}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public WikiJSON update(@PathParam("title") String title, WikiRequestJSON uwr)
+	{
+		long start = System.currentTimeMillis();
+		System.err.println("update : " + title);
+		Wiki w = WikiUtils.getByTitle(em, title);
+		if (w == null) throw new SqrmException(SqrmError.INVALID_EMAIL,
+				"not found");
+
+		System.err.println("found");
+		Wiki wiki = new Wiki();
+		WikiPK id = new WikiPK();
+
+		System.err.println("id = " + w.getTitle() + "/" + w.getRevision());
+		id.setTitle(w.getTitle());
+		id.setRevision(w.getRevision() + 1);
+
+		wiki.setId(id);
+		wiki.setBody(uwr.body);
+		wiki.setNote(uwr.note);
+
+		List<WikiTag> tags = new LinkedList<WikiTag>();
+		if (uwr.tags != null)
+		{
+			for (WikiTagJSON st : uwr.tags)
+			{
+				tags.add(new WikiTag(wiki, st.name, false, st.value, true));
+			}
+		}
+		wiki.setTags(tags);
+
+		WikiUtils.extractTags(em, wiki);
+
+		try
+		{
+			utx.begin();
+			System.err.println("updating id = " + wiki.getId().getTitle() + "/"
+					+ wiki.getId().getRevision());
+			em.persist(wiki);
+			utx.commit();
+		}
+		catch (Exception ex)
+		{
+			throw new SqrmException(SqrmError.BODY_REQUIRED);
+		}
+
+		// TODO: remove previous revisions in index
+		WikiUtils.index(wiki);
+
+		WikiJSON wj = WikiUtils.execute(em, uriInfo, wiki);
+		wj.generatedIn = System.currentTimeMillis() - start;
+		return wj;
+	}
+
+	@DELETE
+	@Path("/{title}")
+	public void delete(@PathParam("title") String title)
+	{
+		Wiki w = WikiUtils.getByTitle(em, title);
+		if (w == null) throw new SqrmException(SqrmError.INVALID_EMAIL,
+				"not found");
+
+		Wiki wiki = new Wiki();
+		WikiPK id = new WikiPK();
+		id.setTitle(w.getId().getTitle());
+		id.setRevision(w.getId().getRevision() + 1);
+
+		wiki.setId(id);
+		wiki.setBody(w.getBody());
+		wiki.setNote(w.getNote());
+		em.persist(wiki);
+
+		// TODO: remove document from index
+	}
+}

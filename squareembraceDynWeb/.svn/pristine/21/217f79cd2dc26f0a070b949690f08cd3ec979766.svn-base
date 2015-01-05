@@ -1,0 +1,14 @@
+
+= Create a new Wiki page.
+
+<?
+	var title = sqrm.param("title");
+?>
+
+|  formType | label | value        |
+|? title    | Title | <?= title ?> |
+|? body     | Body  |              |
+|? note     | Note  |              |
+|? reset    |       | Clear        |
+|? submit   |       | Create       |
+

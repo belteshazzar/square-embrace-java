@@ -1,0 +1,32 @@
+
+
+<?
+	var title = sqrm.param("title");
+	if (null==title)
+	{
+		print("title must be supplied");
+		return;
+	}
+	var wiki = sqrm.get(title);
+	if (null==wiki)
+	{
+		print("wiki for title could not be found");
+		return;
+	}
+?>
+
+title = <?= wiki.title ?>
+revision = <?= wiki.revision ?>
+body = <?= sqrm.escape(wiki.body) ?>
+note = <?= wiki.note ?>
+
+= Update a Wiki page.
+
+|  formType | label  | value                          |
+|? title    | Title  | <?= sqrm.escape(wiki.title) ?> |
+|? revision |        | <?= wiki.revision ?>           |
+|? body     | Body   | <?= sqrm.escape(wiki.body) ?>  |
+|? note     | Note   | <?= sqrm.escape(wiki.note) ?>  |
+|? reset    |        | Clear                          |
+|? submit   |        | Update                         |
+

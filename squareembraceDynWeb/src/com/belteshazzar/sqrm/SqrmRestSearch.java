@@ -1,0 +1,77 @@
+package com.belteshazzar.sqrm;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
+import com.belteshazzar.sqrm.json.SearchResultJSON;
+import com.belteshazzar.sqrm.json.SearchResultsJSON;
+import com.belteshazzar.wiki.Wiki;
+import com.belteshazzar.wiki.WikiUtils;
+import com.belteshazzar.wiki.WikiUtils.SearchResult;
+
+@Path("/rest/search")
+@Stateless
+public class SqrmRestSearch
+{
+	@PersistenceContext(unitName = "seJPA")
+	private EntityManager em;
+
+	@EJB
+	private WikiUtils wikiUtils;
+
+	@GET
+	@Path("")
+	@Produces(MediaType.APPLICATION_JSON)
+	public SearchResultsJSON get(@QueryParam("q") String q)
+	{
+		long start = System.currentTimeMillis();
+
+		List<SearchResult> results = wikiUtils.search(q);
+		if (results == null) throw new SqrmException(SqrmError.INVALID_EMAIL);
+		SearchResultsJSON rs = new SearchResultsJSON();
+		rs.results = new LinkedList<SearchResultJSON>();
+
+		for (SearchResult sr : results)
+		{
+			rs.results.add(new SearchResultJSON(sr.wiki.getTitle(), sr.wiki
+					.getRevision(), sr.score));
+		}
+		rs.count = results.size();
+		rs.generatedIn = (System.currentTimeMillis() - start);
+
+		return rs;
+	}
+
+	@GET
+	@Path("/{tag}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public SearchResultsJSON getByTag(@PathParam("tag") String tag)
+	{
+		long start = System.currentTimeMillis();
+
+		List<Wiki> ws = wikiUtils.getByTag(tag);
+		SearchResultsJSON rs = new SearchResultsJSON();
+		rs.results = new LinkedList<SearchResultJSON>();
+		for (Wiki w : ws)
+		{
+			rs.results.add(new SearchResultJSON(w.getTitle(), w.getRevision(),
+					1));
+		}
+		rs.count = ws.size();
+		rs.generatedIn = (System.currentTimeMillis() - start);
+
+		return rs;
+	}
+
+}

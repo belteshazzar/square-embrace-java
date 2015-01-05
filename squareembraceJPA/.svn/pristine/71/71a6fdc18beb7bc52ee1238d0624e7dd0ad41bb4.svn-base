@@ -1,0 +1,13 @@
+package com.belteshazzar.wiki;
+
+public class Permission
+{
+	public boolean userRead;
+	public boolean userWrite;
+
+	public boolean groupRead;
+	public boolean groupWrite;
+
+	public boolean otherRead;
+	public boolean otherWrite;
+}

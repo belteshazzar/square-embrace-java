@@ -1,0 +1,64 @@
+package com.belteshazzar.wiki;
+
+import java.util.UUID;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@Entity(name="Group")
+@Table(name="GROUPS",uniqueConstraints=@UniqueConstraint(columnNames={"UUID"}))
+@XmlRootElement(name="Group")
+public class Group
+{
+	@Id
+	@Column(name="ID")
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private int id;
+	
+	@Column(name="UUID",nullable = false)
+	private String uuid = UUID.randomUUID().toString();
+
+	@Column(name="NAME")
+	private String name;
+		
+	public Group()
+	{
+		
+	}
+
+	public int getId()
+	{
+		return id;
+	}
+
+	public void setId(int id)
+	{
+		this.id = id;
+	}
+
+	public String getUuid()
+	{
+		return uuid;
+	}
+
+	public void setUuid(String uuid)
+	{
+		this.uuid = uuid;
+	}
+
+	public String getName()
+	{
+		return name;
+	}
+
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+}

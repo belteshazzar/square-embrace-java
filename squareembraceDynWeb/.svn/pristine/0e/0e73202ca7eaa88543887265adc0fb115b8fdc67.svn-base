@@ -1,0 +1,6 @@
+= Login
+
+|? username | Name     |       |
+|? password | Password |       |
+|? reset    |          | Clear |
+|? submit   |          | Login |

@@ -1,0 +1,215 @@
+package com.belteshazzar.wiki;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class WikiReader extends BufferedReader
+{
+	private boolean inString = false;
+	private boolean inChar = false;
+	private boolean inJS = false;
+	private boolean needsNewline = false;
+	private Pattern p = Pattern.compile("(<\\?)|(\\?>)|([^\\\\]\")|([^\\\\]\')");
+	private StringBuilder str;
+	private boolean pre = true;
+	private boolean post = true;
+	private String functionName;
+
+	public WikiReader(String functionName,Reader r)
+	{
+		super(r);
+		this.functionName = functionName;
+		str = new StringBuilder();
+	}
+	
+	@Override
+	public String readLine() throws IOException
+	{
+		if (pre)
+		{
+			pre = false;
+			return "function " + functionName+ "() { try {";
+		}
+		String line = super.readLine();
+		if (line==null)
+		{
+			if (post)
+			{
+				post = false;
+				return "} catch (e) { print(e); } }";
+			}
+			return null;
+		}
+		
+		boolean isTag = false;
+		boolean executeTag = false;
+		List<String> tagParams = new ArrayList<String>();
+
+		if (!inJS && line.matches("^[ \\t]*#!?[a-zA-Z].*"))
+		{
+			isTag = true;
+			line = line.substring(line.indexOf('#')+1);
+
+			if (line.length()>0 && line.charAt(0)=='!')
+			{
+				executeTag = true;
+				line = line.substring(1);
+			}
+			int endToken = 1;
+			for ( ; endToken<line.length() ; endToken++ ) if (line.charAt(endToken)==' '||line.charAt(endToken)=='\t'||line.charAt(endToken)=='\n') break;
+			tagParams.add(line.substring(0,endToken));
+			line = line.substring(endToken);
+		}
+		
+		str.delete(0, str.length());
+
+		Matcher m = p.matcher(line);
+		int pos = 0;
+		inString = false;
+		inChar = false;
+		needsNewline = false;
+
+		while (m.find())
+		{
+			if (m.group(1)!=null  && !inString && !inChar && !inJS)
+			{
+				String s = line.substring(pos, m.start());
+				if (!s.matches("^\\s*$")) 
+				{
+					if (isTag)
+					{
+						addTagParams(tagParams,s);
+					}
+					else
+					{
+						str.append("print(\"");
+						str.append(s.replace("\"", "&quot;"));
+						str.append("\");");
+						needsNewline = true;
+					}
+				}
+				inJS = true;
+				pos = m.end();
+			}
+			else if (m.group(2)!=null && inJS)
+			{
+				String sub = line.substring(pos, m.start());
+				if (sub.length()>0 && sub.charAt(0)=='=')
+				{
+					if (isTag) tagParams.add(sub.substring(1));
+					else str.append("print("+sub.substring(1)+");");
+				}
+				else
+				{
+					if (isTag) tagParams.add(sub);
+					else str.append(sub);					
+				}
+				inJS = false;
+				pos = m.end();
+			}
+			else if (m.group(3)!=null && inJS )
+			{
+				inString = !inString;
+			}
+			else if (m.group(4)!=null && inJS )
+			{
+				inChar = !inChar;
+			}
+		}
+		
+		String s;
+		if (pos==0) s = line;
+		else s = line.substring(pos);
+		if (!s.matches("^\\s*$"))
+		{
+			if (!inJS && !isTag) 
+			{
+				str.append("print(\"");
+				s = s.replace("\"", "&quot;");
+			}
+
+			if (isTag) 
+			{
+				if (inJS) tagParams.add(s);
+				else addTagParams(tagParams,s);
+			}
+			else str.append(s);
+
+			if (!inJS && !isTag) 
+			{
+				str.append("\");");
+				needsNewline = true;
+			}
+		}
+		
+		if (needsNewline && !inJS && !isTag) str.append("print('\\n');");
+
+		if (isTag) return processTag(executeTag,tagParams);
+		else return str.toString();
+	}
+
+	private String processTag(boolean execute, List<String> tokens)
+	{
+		if (!execute)
+		{
+			if (tokens.size()==1)
+			{
+				return "document."+tokens.get(0)+" = true;";
+			}
+			else
+			{
+				 String result =  "document." + tokens.get(0) + " = [" + tokens.get(1);
+				 for (int i=2 ; i<tokens.size() ; i++ ) result += "," + tokens.get(i);
+				 result += "];";
+				 return result;				
+			}
+		}
+		else
+		{
+			String result =  "sqrm.resolveAndInvoke(\"" + tokens.get(0) + "\"";
+			if (tokens.size()>0)
+			{
+				result +=  "," + tokens.get(1);
+				
+				for (int i=2 ; i<tokens.size() ; i++ ) result += "," + tokens.get(i);
+			}
+			result += ");";
+			return result;				
+		}
+	}
+	
+	private void addTagParams(List<String> tagParams, String str)
+	{
+		String[] params = str.split("\\s+(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+
+		for (int i=0 ; i<params.length ; i++)
+		{
+			String param = params[i].trim();
+			if (param.length()>0) tagParams.add(tagParam(param));
+		}
+
+	}
+
+	private String tagParam(String s)
+	{
+		if ( s.charAt(0)=='"' && s.charAt(s.length()-1)=='"')
+		{
+			return s;
+		}
+
+		try
+		{
+			Double.parseDouble(s);
+			return s;
+		}
+		catch (NumberFormatException nfex)
+		{
+			return '"' + s + '"';
+		}
+	}
+}

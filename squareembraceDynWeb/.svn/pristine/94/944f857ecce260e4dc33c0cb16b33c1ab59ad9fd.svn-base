@@ -1,0 +1,31 @@
++ navbar
+	+ btn
+		+ icon-bar
+			dummy
+		+ icon-bar
+			dummy
+		+ icon-bar
+			dummy
+	* [ Project name ]
+	* [Home]
+	* [About]
+	* [Contact]
+	|? username |   |         | Username |
+	|? password |   |         | Password |
+	|? submit   |   | Sign in |          |
+
+= Blog
+
+<?
+	var wc = sqrm.getByTag("blogpost").sortByCreatedAt();
+
+	for (var i=0 ; i<wc.count() ; i++)
+	{
+		sqrm.hash(wc.get(i));
+?>
+		[ update?title=<?= wc.get(i).getTitle() ?> | edit ]
+<?
+	}
+?>
+
+	[ create ]

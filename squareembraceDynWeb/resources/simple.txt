@@ -1,0 +1,40 @@
+
+#tag
+#tag 5 "fred is here" boo
+
+this is just some text
+
+= heading 1
+== heading 2
+=== heading 3
+==== heading 4
+
+blah blah 
+
+this is \
+ a really long line \
+   ending here.
+
+  \
+   \
+
+* item1
+** item2
+** item3
+* item4
+
+more list:
+
+*** three
+
+testing
+
+|! table |
+| cell  |
+
+just some more text
+
+| table | head |
+| cell  | more |
+
+not good \

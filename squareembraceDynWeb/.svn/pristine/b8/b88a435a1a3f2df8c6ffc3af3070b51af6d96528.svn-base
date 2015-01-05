@@ -1,0 +1,19 @@
+package com.belteshazzar.wiki.rest.json;
+
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name="WikiRequest")
+public class WikiRequestJSON
+{
+	public String title;
+	public String body;
+	public String note;
+	public List<SystemTagJSON> systemTags;
+	
+	public WikiRequestJSON()
+	{
+		
+	}
+}

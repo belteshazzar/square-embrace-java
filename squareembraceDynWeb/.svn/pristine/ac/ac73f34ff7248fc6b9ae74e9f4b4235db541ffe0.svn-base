@@ -1,0 +1,169 @@
+package com.belteshazzar.wiki;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class WikiReader extends BufferedReader
+{
+	private boolean inString = false;
+	private boolean inChar = false;
+	private boolean inJS = false;
+	private boolean needsNewline = false;
+	private Pattern p = Pattern.compile("(<\\?)|(\\?>)|([^\\\\]\")|([^\\\\]\')");
+	private StringBuilder str;
+	private boolean pre = true;
+	private boolean post = true;
+	private String functionName;
+
+	public WikiReader(String functionName,Reader r)
+	{
+		super(r);
+		this.functionName = functionName;
+		str = new StringBuilder();
+	}
+	
+	@Override
+	public String readLine() throws IOException
+	{
+		if (pre)
+		{
+			pre = false;
+			return "function " + functionName+ "() {";
+		}
+		String line = super.readLine();
+		if (line==null)
+		{
+			if (post)
+			{
+				post = false;
+				return "}";
+			}
+			return null;
+		}
+		
+		if (line.length()>1 && line.charAt(0)=='#')
+		{
+			return processTag(line);
+		}
+		
+		str.delete(0, str.length());
+
+		Matcher m = p.matcher(line);
+		int pos = 0;
+		inString = false;
+		inChar = false;
+		needsNewline = false;
+
+		while (m.find())
+		{
+			if (m.group(1)!=null  && !inString && !inChar && !inJS)
+			{
+				String s = line.substring(pos, m.start());
+				if (!s.matches("^\\s*$")) 
+				{
+					str.append("print(\"");
+					str.append(s);
+					str.append("\");");
+					needsNewline = true;
+				}
+				inJS = true;
+				pos = m.end();
+			}
+			else if (m.group(2)!=null && inJS)
+			{
+				str.append(line.substring(pos, m.start()));
+				inJS = false;
+				pos = m.end();
+			}
+			else if (m.group(3)!=null && inJS )
+			{
+				inString = !inString;
+			}
+			else if (m.group(4)!=null && inJS )
+			{
+				inChar = !inChar;
+			}
+		}
+		
+		String s;
+		if (pos==0) s = line;
+		else s = line.substring(pos);
+		if (!s.matches("^\\s*$"))
+		{
+			if (!inJS) str.append("print(\"");
+			str.append(s);
+			if (!inJS) 
+			{
+				str.append("\");");
+				needsNewline = true;
+			}
+		}
+		
+		if (needsNewline && !inJS) str.append("print('\\n');");
+		
+		return str.toString();
+	}
+
+	private String processTag(String line)
+	{
+		String[] tag = line.substring(1).split("\\s+",2);
+
+		if (tag[0].charAt(0)!='!')
+		{
+			if (tag.length==2)
+			{
+				 return "document."+tag[0]+" = \""+tag[1]+"\";";
+			}
+			else
+			{
+				return "document."+tag[0]+" = true;";
+			}
+		}
+		else
+		{
+			tag[0] = tag[0].substring(1);
+			String result = tag[0]+"(";
+			if (tag.length==2)
+			{
+				String[] params = tag[1].split("\\s+(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+				List<String> cleanedParams = new LinkedList<String>();
+				for (int i=0 ; i<params.length ; i++)
+				{
+					String param = params[i].trim();
+					if (param.length()>0) cleanedParams.add(param);
+				}
+				for (int i=0 ; i<cleanedParams.size()-1 ; i++)
+				{
+					result += tagParam(cleanedParams.get(i))+",";
+				}
+				if (cleanedParams.size()>0) result += tagParam(cleanedParams.get(cleanedParams.size()-1));
+			}
+			result += ");";
+
+			return result;
+		}
+	}
+
+	private String tagParam(String s)
+	{
+		if ( s.charAt(0)=='"' && s.charAt(s.length()-1)=='"')
+		{
+			return s;
+		}
+
+		try
+		{
+			Double.parseDouble(s);
+			return s;
+		}
+		catch (NumberFormatException nfex)
+		{
+			return '"' + s + '"';
+		}
+	}
+}

@@ -1,0 +1,127 @@
+package com.belteshazzar.wiki;
+
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.EntityManager;
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
+import javax.ws.rs.core.UriInfo;
+
+public class WikiScript
+{
+	private ScriptEngine engine;
+	private EntityManager em;
+	private UriInfo uriInfo;
+	private Wiki wiki;
+	private Map<String, String> functionMap;
+
+	public WikiScript(ScriptEngine engine, EntityManager em, UriInfo uriInfo,
+			Wiki wiki)
+	{
+		this.engine = engine;
+		this.em = em;
+		this.uriInfo = uriInfo;
+		this.wiki = wiki;
+		functionMap = new Hashtable<String, String>();
+	}
+
+	public void addFunctionName(String wikiName, String fnName)
+	{
+		functionMap.put(wikiName, fnName);
+	}
+
+	public Wiki get(String title)
+	{
+		Wiki w = WikiUtils.getByTitle(em, title);
+		return w;
+	}
+
+	public void hash(String title)
+	{
+		Wiki w = WikiUtils.getByTitle(em, title);
+		hash(w);
+	}
+
+	public void hash(Wiki w)
+	{
+
+		WikiUtils.collectJS(em, w, engine, this);
+
+		Invocable inv = (Invocable) engine;
+		String functionName = WikiUtils.functionNameOf(w);
+
+		try
+		{
+			inv.invokeFunction(functionName);
+		}
+		catch (NoSuchMethodException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (ScriptException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void resolveAndInvoke(String name, Object... args)
+	{
+		String fn = functionMap.get(name);
+		System.out.println("invoking: " + name + " = " + fn);
+
+		Invocable inv = (Invocable) engine;
+		try
+		{
+			inv.invokeFunction(fn, args);
+		}
+		catch (NoSuchMethodException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (ScriptException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	public Wiki me()
+	{
+		return wiki;
+	}
+
+	public String param(String param)
+	{
+		return uriInfo.getQueryParameters().getFirst(param);
+	}
+
+	public String escape(String markup)
+	{
+		String result = markup.replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+				.replaceAll("\\|", "&#124;").replaceAll("\n", "<BR>");
+
+		return result;
+	}
+
+	public WikiCollection getByTag(String tag)
+	{
+		WikiCollection col = new WikiCollection();
+
+		List<Wiki> ws = WikiUtils.getByTag(em, tag);
+
+		for (int i = 0; i < ws.size(); i++)
+		{
+			col.add(ws.get(i));
+		}
+
+		return col;
+	}
+
+}

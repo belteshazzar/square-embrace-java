@@ -1,0 +1,58 @@
+package com.belteshazzar.wiki;
+
+import java.io.Serializable;
+import java.util.UUID;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+
+@Embeddable
+public class WikiPK implements Serializable
+{
+	private static final long	serialVersionUID	= -7530056015214570294L;
+
+	@Column(name = "UUID", nullable = false)
+	private String uuid = UUID.randomUUID().toString();
+
+    @Column(name = "REVISION", nullable = false)
+    private int revision = 0;
+    
+    public WikiPK()
+    {
+    }
+    
+    public int hashCode()
+    {
+    	return uuid.hashCode() + revision;
+    }
+    
+    public boolean equals(Object o)
+    {
+    	if ( o instanceof WikiPK)
+    	{
+    		WikiPK pk = (WikiPK)o;
+    		return pk.uuid.equals(uuid) && pk.revision == revision;
+    	}
+    	return false;
+    }
+
+	public String getUuid()
+	{
+		return uuid;
+	}
+
+	public void setUuid(String uuid)
+	{
+		this.uuid = uuid;
+	}
+
+	public int getRevision()
+	{
+		return revision;
+	}
+
+	public void setRevision(int revision)
+	{
+		this.revision = revision;
+	}
+}

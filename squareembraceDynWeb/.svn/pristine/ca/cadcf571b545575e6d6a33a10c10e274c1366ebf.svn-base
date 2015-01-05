@@ -1,0 +1,16 @@
+
+= Blog
+
+<?
+	var wc = sqrm.getByTag("blogpost").sortByCreatedAt();
+
+	for (var i=0 ; i<wc.count() ; i++)
+	{
+		sqrm.hash(wc.get(i));
+?>
+		[ update?title=<?= wc.get(i).getTitle() ?> | edit ]
+<?
+	}
+?>
+
+	[ create ]

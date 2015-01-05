@@ -1,0 +1,28 @@
++n1 navbar navbar-inverse navbar-fixed-top
+	+n2 navbar-inner
+		+n3 container
+			[ Project name ]
+			+n4 nav-collapse collapse
+				* [Home]
+				* [About]
+				* [Contact]
+				|? username | Name     |       |
+				|? password | Password |       |
+				|? reset    |          | Clear |
+				|? submit   |          | Login |
+
+= Blog
+
+<?
+	var wc = sqrm.getByTag("blogpost").sortByCreatedAt();
+
+	for (var i=0 ; i<wc.count() ; i++)
+	{
+		sqrm.hash(wc.get(i));
+?>
+		[ update?title=<?= wc.get(i).getTitle() ?> | edit ]
+<?
+	}
+?>
+
+	[ create ]

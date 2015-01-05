@@ -1,0 +1,13 @@
+= Blog
+
+<?
+	var wc = sqrm.getByTag("blogpost");
+	print("returned: " + wc.count() + "\n");
+	wc.sortByCreatedAt();
+
+	for (var i=0 ; i<wc.count() ; i++)
+	{
+		print("wiki: " + wc.get(i) + "\n");
+		sqrm.hash(wc.get(i));
+	}
+?>

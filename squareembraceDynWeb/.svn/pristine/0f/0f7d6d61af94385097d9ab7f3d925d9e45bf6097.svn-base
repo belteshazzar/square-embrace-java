@@ -1,0 +1,16 @@
+package com.belteshazzar.wiki;
+
+import java.util.LinkedList;
+
+public class WikiCollection extends LinkedList<Wiki>
+{
+	public WikiCollection()
+	{
+		super();
+	}
+	
+	public int count()
+	{
+		return this.size();
+	}
+}

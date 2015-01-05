@@ -1,0 +1,87 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.belteshazzar.wiki</groupId>
+    <artifactId>sqrm-auth</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+
+    <name>Custom Glassfish Security Realm</name>
+	<description>Custom glassfish security realm</description>
+    <url>http://maven.apache.org</url>
+	<licenses>
+		<license>
+			<distribution>repo</distribution>
+			<name>BSD 3-Clause</name>
+			<url>http://opensource.org/licenses/BSD-3-Clause</url>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:svn:http://square-embrace.googlecode.com/svn/trunk/sqrm-auth</connection>
+		<developerConnection>scm:svn:https://square-embrace.googlecode.com/svn/trunk/sqrm-auth</developerConnection>
+		<url>http://square-embrace.googlecode.com/svn/trunk/sqrm-auth</url>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>belteshazzar</id>
+			<name>daniel</name>
+			<email>daniel@belteshazzar.com</email>
+		</developer>
+	</developers>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+<repositories>
+<repository>
+   <id>EclipseLink</id>
+   <url>http://download.eclipse.org/rt/eclipselink/maven.repo</url>
+</repository>
+</repositories>
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.main.security</groupId>
+            <artifactId>security</artifactId>
+            <version>4.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <optimise>true</optimise>
+                    <debug>true</debug>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            com.belteshazzar.wiki.auth.*
+                        </Export-Package>
+                        <Import-Package>
+                            com.sun.appserv.security,
+                            org.glassfish.security.common,
+                            com.sun.enterprise.security.auth.realm,
+                            com.sun.enterprise.security.auth.login.common,
+                            java.util,
+                            javax.security.auth,
+                            javax.security.auth.login
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

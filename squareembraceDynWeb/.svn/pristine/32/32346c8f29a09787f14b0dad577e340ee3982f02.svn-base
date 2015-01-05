@@ -1,0 +1,37 @@
+package com.belteshazzar.wiki;
+
+import javax.persistence.EntityManager;
+import javax.ws.rs.core.UriInfo;
+
+public class WikiScript
+{
+	private EntityManager em;
+	private UriInfo uriInfo;
+
+	public WikiScript(EntityManager em,UriInfo uriInfo)
+	{
+		this.em = em;
+		this.uriInfo = uriInfo;
+	}
+	
+	public Wiki get(String uuid)
+	{
+		return WikiUtils.getByUUID(em, uuid);
+	}
+	
+	public String param(String param)
+	{
+		return uriInfo.getQueryParameters().getFirst(param);
+	}
+	
+	public String escape(String markup)
+	{
+		String result = markup
+				.replaceAll("<", "&lt;")
+				.replaceAll(">", "&gt;")
+				.replaceAll("\\|", "&#124;")
+				.replaceAll("\n","<BR>");
+
+		return result;
+	}
+}

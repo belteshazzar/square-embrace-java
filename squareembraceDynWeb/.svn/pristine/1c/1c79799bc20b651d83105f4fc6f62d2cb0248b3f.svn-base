@@ -1,0 +1,17 @@
+package com.belteshazzar.wiki.rest;
+
+public enum RestError {
+
+	INVALID_EMAIL(100,"Invalid email provide");
+	
+	private int code;
+	private String msg;
+
+	private RestError(int code, String msg) {
+		this.code = code;
+		this.msg = msg;
+	}
+	
+	public int getCode() { return code; }
+	public String getMessage() { return msg; }
+}

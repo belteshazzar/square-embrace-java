@@ -1,0 +1,25 @@
+package com.belteshazzar.wiki.rest.json;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name="SearchResult")
+public class SearchResultJSON
+{
+	public String uuid;
+	public int revision;
+	public String title;
+	public float score;
+	
+	public SearchResultJSON()
+	{
+		
+	}
+
+	public SearchResultJSON(String uuid, int revision,String title,float score)
+	{
+		this.uuid = uuid;
+		this.revision = revision;
+		this.title = title;
+		this.score = score;
+	}
+}

@@ -1,0 +1,198 @@
+
+var sqrem = sqrem || {};
+
+(function(sqrem) {
+
+   var URL = "http://localhost:8080/squareembraceDynWeb/rest/";
+
+   sqrem.get = function(id,cb,errCb)
+   {
+     $.ajax({
+       type: 'GET',
+       url: URL + "wiki/"+id,
+       dataType: 'json',
+       error: function(request,textStatus,error) {
+          if (errCb)
+          {
+             try
+             {
+                errCb(error);
+             }
+             catch (e)
+             {
+                console.log(e);
+             }
+          }
+       },
+       success: function(data,textStatus,request) {
+          if (cb)
+          {
+             try
+             {
+                cb(data);
+             }
+             catch (e)
+             {
+                console.log(e);
+             }
+          }
+       }
+     });
+   };
+
+   sqrem.create = function(title,body,note,cb,errCb)
+   {      
+      var request = JSON.stringify({ title: title,
+         body: body,
+         note: note });
+      
+      $.ajax({
+         url: URL + "wiki",
+         type: "POST",
+         data: request,
+         contentType: "application/json; charset=utf-8",
+         dataType: "json",
+         error: function(request,textStatus,error) {
+            if (errCb)
+            {
+               try
+               {
+                  errCb(error);
+               }
+               catch (e)
+               {
+                  console.log(e);
+               }
+            }
+         },
+         success: function(data,textStatus,request) {
+            if (cb)
+            {
+               try
+               {
+                  cb(data);
+               }
+               catch (e)
+               {
+                  console.log(e);
+               }
+            }
+         }
+      });
+   };
+
+   sqrem.update = function(id,body,note,cb,errCb)
+   {
+      var request = JSON.stringify({ 
+         body: body,
+         note: note });
+      
+      $.ajax({
+         url: URL + "wiki/"+id,
+         type: "PUT",
+         data: request,
+         contentType: "application/json; charset=utf-8",
+         dataType: "json",
+         error: function(request,textStatus,error) {
+            if (errCb)
+            {
+               try
+               {
+                  errCb(error);
+               }
+               catch (e)
+               {
+                  console.log(e);
+               }
+            }
+         },
+         success: function(data,textStatus,request) {
+            if (cb)
+            {
+               try
+               {
+                  cb(data);
+               }
+               catch (e)
+               {
+                  console.log(e);
+               }
+            }
+         }
+      });
+   
+   };
+
+   sqrem.del = function(id,cb,errCb)
+   {
+     $.ajax({
+       type: 'delete',
+       url: URL + "wiki/"+id,
+       dataType: 'json',
+       error: function(request,textStatus,error) {
+          if (errCb)
+          {
+             try
+             {
+                errCb(error);
+             }
+             catch (e)
+             {
+                console.log(e);
+             }
+          }
+       },
+       success: function(data,textStatus,request) {
+          if (cb)
+          {
+             try
+             {
+                cb(data);
+             }
+             catch (e)
+             {
+                console.log(e);
+             }
+          }
+       }
+     });
+   };
+
+   sqrem.search = function(query,cb,errCb)
+   {
+     $.ajax({
+       type: 'get',
+       url: URL + "search?q="+query,
+       dataType: 'json',
+       error: function(request,textStatus,error) {
+          if (errCb)
+          {
+             try
+             {
+                errCb(error);
+             }
+             catch (e)
+             {
+                console.log(e);
+             }
+          }
+       },
+       success: function(data,textStatus,request) {
+          if (cb)
+          {
+             try
+             {
+                cb(data);
+             }
+             catch (e)
+             {
+                console.log(e);
+             }
+          }
+       }
+     });
+   };
+
+   
+
+})(sqrem);

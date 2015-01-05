@@ -1,0 +1,10 @@
+
+= Create a new Wiki page.
+
+|  formType | label  | value |
+|? title    | Title  |       |
+|? body     | Body   |       |
+|? node     | Node   |       |
+|? reset    | Clear  |       |
+|? submit   | Create |       |
+
